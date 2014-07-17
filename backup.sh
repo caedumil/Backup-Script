@@ -16,13 +16,6 @@ elif [[ -e /etc/backup.conf ]]; then
     source /etc/backup.conf
 fi
 
-## Vars
-DATE=$(date "+%Y-%m-%d")
-TMP="/tmp"
-RAND="$RANDOM"
-TARF="$RAND.tar.gz"
-TMPD="$TMP/$RAND"
-
 ## Functions
 # para os backups
 bkp(){
@@ -39,35 +32,37 @@ bkp(){
 
 # para os extras
 dot(){
+    local DATE=$(date "+%Y-%m-%d")
+    local DIR="$(mktemp -d)"
+    local TAR="$DIR.tgz"
+
     if [[ -z $dot ]]; then
         echo -e "\e[1mDon't know what to sync here, sorry \e[0m"
         return
     fi
 
-    echo -e "\e[1;32m\n\ncreating dotfiles-folder \e[0m"
-    [[ -d $TMPD ]] || mkdir -p $TMPD
-    cd $TMP
+    echo -e "\e[1;32m\n\npreparing dotfiles-folder \e[0m"
+    mkdir $DIR/{home,config,localshare}
 
     echo -e "\e[1;32mcopying dotfiles to dotfiles-folder \e[0m"
-    [[ -d $TMPD/home ]] || mkdir $TMPD/{home,config,localshare}
     for one in $dot; do
-        one_="$HOME/$one"
+        local one_="$HOME/$one"
         if [[ -e $one_ ]]; then
             if [[ -n $(echo $one | grep -o "config") ]]; then
-                cp -r $one_ $TMPD/config
+                cp -r $one_ $DIR/config
             elif [[ -n $(echo $one | grep -o "local") ]]; then
-                cp -r $one_ $TMPD/localshare
+                cp -r $one_ $DIR/localshare
             else
-                cp -r $one_ $TMPD/home
+                cp -r $one_ $DIR/home
             fi
         fi
     done
 
     echo -e "\e[1;32mcompressing with tar \e[0m"
-    tar -czf $TMP/$TARF $RAND
+    tar -czf $TAR --directory=$DIR home config localshare
 
-    echo -e "\e[1;32msyncing arch.tar.gz to server \e[0m"
-    rsync "${DSYNCOPT[@]}" $TMP/$TARF $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tar.gz
+    echo -e "\e[1;32msyncing arch.tgz to server \e[0m"
+    rsync "${DSYNCOPT[@]}" $TAR $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tgz
     sleep 3
 }
 

@@ -93,9 +93,6 @@ while (( "$#" )); do
                 bkp web $con $(echo $con | awk -F '/' '{ print $NF }' | sed 's/.//')
             done
             ;;
-        chrome)
-            bkp web ~/.config/chromium chromium
-            ;;
         dotfiles)
             dot
             ;;
@@ -104,7 +101,6 @@ while (( "$#" )); do
             printf "%s\n"\
                 "home       = home folder"\
                 "web        = browser, email"\
-                "chrome     = chromium"\
                 "dotfiles   = .files and .folders"
             break
             ;;

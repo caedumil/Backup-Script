@@ -1,15 +1,17 @@
 #!/bin/bash
-####                                                                        ####
-##  Script para sincronizar com o 2º PC pastas e arquivos.                    ##
-##                                                                            ##
-####                                                                        ####
+#####
+##
+##  Script to backup files and folders in a remote server.
+##
+#####
 
-VERSION='13.0'      # -- Caedus <caedus75@gmail.com>
-VDATE='2014-05-20'  # release date
-PKG='backup'        # backup-script
+### Define some versioning variables.
+VERSION='13.0'          # -- Caedus <caedus75@gmail.com>
+VDATE='2014-05-20'      # release date
+PKG='backup'            # backup-script
 
-## Functions
-# para os backups
+### Define functions.
+# Put everything where it belongs on the server.
 bkp(){
     [[ -d $2 ]] || return
 
@@ -26,7 +28,7 @@ bkp(){
     sleep 3
 }
 
-# para os extras
+# Pack dotfiles and send to the server
 dot(){
     [[ -z $dot ]] && { printf "Don't know what to sync here, sorry\n"; return; }
 
@@ -59,6 +61,7 @@ dot(){
     sleep 3
 }
 
+# Check if server is alive to receive the transfers.
 isup(){
     if ping -c 1 -w 5 $SERVER &>/dev/null; then
         return 0
@@ -67,7 +70,7 @@ isup(){
     fi
 }
 
-## Put everything above to some use now!
+### Define main.
 if [[ -e $HOME/.config/backup.conf ]]; then
     source $HOME/.config/backup.conf
 elif [[ -e /etc/backup.conf ]]; then

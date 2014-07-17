@@ -71,19 +71,19 @@ dot(){
 }
 
 isup(){
+    echo -en "`date "+%Y-%m-%d--%H:%M"` > Server is "
     if ping -c 1 -w 5 $SERVER &>/dev/null; then
-        STAT="UP"
+        echo "UP"
+        return 0
     else
-        STAT="DOWN"
+        echo "DOWN"
+        return 1
     fi
-    echo -e "`date "+%Y-%m-%d--%H:%M"` > Server is $STAT"
 }
 
 ## Put everything above to some use now!
 while (( "$#" )); do
-    if ! isup; then
-        exit 1
-    fi
+    [[ isup -eq 1 ]] && echo "Can't connect to server, aborting"; exit 1
 
     case $1 in
         home)

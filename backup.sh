@@ -99,13 +99,16 @@ while (( "$#" )); do
         dotfiles)
             dot
             ;;
-        '-h' | '--help' | '-v' | '--version')
+        "-h" | "--help")
             echo -e "\e[1m\n\n \$ $PKG home &/| web &/| chrome &/| dotfiles \e[0m"
             echo -e "home\t\t= home folder"
             echo -e "web\t\t= browser, email"
             echo -e "chrome\t\t= chromium"
             echo -e "dotfiles\t= dot files and folders"
-            echo -e "\e[1m\n\n$PKG © Caedus75 \nversion $VERSION ($VDATE)"
+            break
+            ;;
+        "-v" | "--version")
+            echo -e "\e[1m$PKG © Caedus75 \nversion $VERSION ($VDATE)"
             break
             ;;
     esac

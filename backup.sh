@@ -10,10 +10,10 @@ PKG='backup'        # backup-script
 
 ### This is the beginning of the script
 ## Soucer config file
-if [[ -e $HOME/.backup.cfg ]]; then
-    source $HOME/.backup.cfg
-elif [[ -e /etc/backup.cfg ]]; then
-    source /etc/backup.cfg
+if [[ -e $HOME/.config/backup.conf ]]; then
+    source $HOME/.config/backup.conf
+elif [[ -e /etc/backup.conf ]]; then
+    source /etc/backup.conf
 fi
 
 ## Vars

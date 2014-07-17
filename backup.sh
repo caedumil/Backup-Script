@@ -21,23 +21,23 @@ bkp(){
         local TARGET="$DESTB/$3"
     fi
 
-    echo -e "\e[1;32m\nsync $3 \e[0m"
+    printf "Sync %s\n" $3
     rsync "${OSYNCOPT[@]}" "${DSYNCOPT[@]}" $2/ $SERVER:$TARGET
     sleep 3
 }
 
 # para os extras
 dot(){
-    [[ -z $dot ]] && echo -e "\e[1mDon't know what to sync here, sorry \e[0m"; return
+    [[ -z $dot ]] && printf "Don't know what to sync here, sorry\n"; return
 
     local DATE=$(date "+%Y-%m-%d")
     local DIR="$(mktemp -d)"
     local TAR="$DIR.tgz"
 
-    echo -e "\e[1;32m\n\npreparing dotfiles-folder \e[0m"
+    printf "Preparing dotfiles-folder\n"
     mkdir $DIR/{home,config,localshare}
 
-    echo -e "\e[1;32mcopying dotfiles to dotfiles-folder \e[0m"
+    printf "Copying dotfiles to dotfiles-folder\n"
     for one in $dot; do
         local one_="$HOME/$one"
         if [[ -e $one_ ]]; then
@@ -51,21 +51,21 @@ dot(){
         fi
     done
 
-    echo -e "\e[1;32mcompressing with tar \e[0m"
+    printf "Compressing with tar\n"
     tar -czf $TAR --directory=$DIR home config localshare
 
-    echo -e "\e[1;32msyncing arch.tgz to server \e[0m"
+    printf "Syncing arch.tgz to server\n"
     rsync "${DSYNCOPT[@]}" $TAR $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tgz
     sleep 3
 }
 
 isup(){
-    echo -en "`date "+%Y-%m-%d--%H:%M"` > Server is "
+    printf "%s > Server is " $(date "+%Y-%m-%d--%H:%M")
     if ping -c 1 -w 5 $SERVER &>/dev/null; then
-        echo "UP"
+        printf "UP"
         return 0
     else
-        echo "DOWN"
+        printf "DOWN"
         return 1
     fi
 }
@@ -78,7 +78,7 @@ elif [[ -e /etc/backup.conf ]]; then
 fi
 
 while (( "$#" )); do
-    [[ isup -eq 1 ]] && echo "Can't connect to server, aborting"; exit 1
+    [[ isup -eq 1 ]] && printf "Can't connect to server, aborting\n"; exit 1
 
     case $1 in
         home)
@@ -100,15 +100,16 @@ while (( "$#" )); do
             dot
             ;;
         "-h" | "--help")
-            echo -e "\e[1m\n\n \$ $PKG home &/| web &/| chrome &/| dotfiles \e[0m"
-            echo -e "home\t\t= home folder"
-            echo -e "web\t\t= browser, email"
-            echo -e "chrome\t\t= chromium"
-            echo -e "dotfiles\t= dot files and folders"
+            printf "\$ %s home  web  chrome  dotfiles\n" $PKG
+            printf "%s\n"\
+                "home       = home folder"\
+                "web        = browser, email"\
+                "chrome     = chromium"\
+                "dotfiles   = .files and .folders"
             break
             ;;
         "-v" | "--version")
-            echo -e "\e[1m$PKG © Caedus75 \nversion $VERSION ($VDATE)"
+            printf "%s © Caedus75 \nversion %s (%s)\n" $PKG $VERSION $VDATE
             break
             ;;
     esac

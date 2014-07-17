@@ -8,14 +8,6 @@ VERSION='13.0'      # -- Caedus <caedus75@gmail.com>
 VDATE='2014-05-20'  # release date
 PKG='backup'        # backup-script
 
-### This is the beginning of the script
-## Soucer config file
-if [[ -e $HOME/.config/backup.conf ]]; then
-    source $HOME/.config/backup.conf
-elif [[ -e /etc/backup.conf ]]; then
-    source /etc/backup.conf
-fi
-
 ## Functions
 # para os backups
 bkp(){
@@ -79,17 +71,25 @@ isup(){
 }
 
 ## Put everything above to some use now!
+if [[ -e $HOME/.config/backup.conf ]]; then
+    source $HOME/.config/backup.conf
+elif [[ -e /etc/backup.conf ]]; then
+    source /etc/backup.conf
+fi
+
 while (( "$#" )); do
     [[ isup -eq 1 ]] && echo "Can't connect to server, aborting"; exit 1
 
     case $1 in
         home)
             for per in $HOMEDIR; do
+                [[ -z $per ]] && break
                 bkp home $per $(echo $per | awk -F '/' '{ print $NF }')
             done
             ;;
         web)
             for con in $WEBDIR; do
+                [[ -z $con ]] && break
                 bkp web $con $(echo $con | awk -F '/' '{ print $NF }' | sed 's/.//')
             done
             ;;

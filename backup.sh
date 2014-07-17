@@ -6,8 +6,8 @@
 #####
 
 ### Define some versioning variables.
-VERSION='13.0'          # -- Caedus <caedus75@gmail.com>
-VDATE='2014-05-20'      # release date
+VERSION='2.1.0'         # -- Caedus <caedus75@gmail.com>
+VDATE='2014-07-17'      # release date
 PKG='backup'            # backup-script
 
 ### Define functions.

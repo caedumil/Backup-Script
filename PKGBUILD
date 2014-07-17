@@ -2,20 +2,20 @@
 
 pkgname=script-backup
 _realname=backup
-pkgver=13.0
+pkgver=2.1.0
 pkgrel=1
 pkgdesc="Script para backup dos meu arquivos pessoais"
 arch=('any')
 license=('GPL3')
 depends=('rsync')
-source=('backup.cfg' 'backup.sh')
+source=('backup.conf' 'backup.sh')
 md5sums=('7b8738912ca5a71392f3a59aba7dc438'
-         'b78925ab353ce0fbe5d7fdeda7c2ff6e')
+         '1dac77500a035dd3b28571c37eec4425')
 conflicts=('backup')
-backup=('etc/backup.cfg')
+backup=('etc/backup.conf')
 
 package() {
 	cd ${srcdir}
-    install -Dm 644 ${_realname}.cfg "${pkgdir}/etc/${_realname}.cfg"
+    install -Dm 644 ${_realname}.conf "${pkgdir}/etc/${_realname}.conf"
 	install -Dm 755 ${_realname}.sh "${pkgdir}/usr/bin/${_realname}"
 }

@@ -36,14 +36,11 @@ bkp(){
 
 # para os extras
 dot(){
+    [[ -z $dot ]] && echo -e "\e[1mDon't know what to sync here, sorry \e[0m"; return
+
     local DATE=$(date "+%Y-%m-%d")
     local DIR="$(mktemp -d)"
     local TAR="$DIR.tgz"
-
-    if [[ -z $dot ]]; then
-        echo -e "\e[1mDon't know what to sync here, sorry \e[0m"
-        return
-    fi
 
     echo -e "\e[1;32m\n\npreparing dotfiles-folder \e[0m"
     mkdir $DIR/{home,config,localshare}

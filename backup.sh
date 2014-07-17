@@ -28,7 +28,7 @@ bkp(){
 
 # para os extras
 dot(){
-    [[ -z $dot ]] && printf "Don't know what to sync here, sorry\n"; return
+    [[ -z $dot ]] && { printf "Don't know what to sync here, sorry\n"; return; }
 
     local DATE=$(date "+%Y-%m-%d")
     local DIR="$(mktemp -d)"
@@ -75,7 +75,7 @@ elif [[ -e /etc/backup.conf ]]; then
 fi
 
 while (( "$#" )); do
-    [[ isup -eq 1 ]] && printf "Can't connect to server, aborting\n"; exit 1
+    [[ isup -eq 1 ]] && { printf "Can't connect to server, aborting\n"; exit 1; }
 
     case $1 in
         home)

@@ -19,14 +19,18 @@ fi
 ## Functions
 # para os backups
 bkp(){
-    case $1 in
-        'home') [[ $3 = 'Music' ]] && TARGET="$DESTM" || TARGET="$DESTB/$3" ;;
-        'web') TARGET="$DESTB/$DOT/$3" ;;
-    esac
-    if [[ -d $2 ]]; then
-        echo -e "\e[1;32m\nsync $3 \e[0m"
-        rsync "${OSYNCOPT[@]}" "${DSYNCOPT[@]}" $2/ $SERVER:$TARGET
+    [[ -d $2 ]] || return
+
+    if [[ $1 == "web" ]]; then
+        local TARGET="$DETB/$DOT/$3"
+    elif [[ $1 == "home" && $3 == "Music" ]]; then
+        local TARGET="$DESTM"
+    else
+        local TARGET="$DESTB/$3"
     fi
+
+    echo -e "\e[1;32m\nsync $3 \e[0m"
+    rsync "${OSYNCOPT[@]}" "${DSYNCOPT[@]}" $2/ $SERVER:$TARGET
     sleep 3
 }
 

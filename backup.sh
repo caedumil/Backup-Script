@@ -60,12 +60,9 @@ dot(){
 }
 
 isup(){
-    printf "%s > Server is " $(date "+%Y-%m-%d--%H:%M")
     if ping -c 1 -w 5 $SERVER &>/dev/null; then
-        printf "UP"
         return 0
     else
-        printf "DOWN"
         return 1
     fi
 }

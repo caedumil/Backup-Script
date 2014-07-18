@@ -13,6 +13,7 @@ PKG='backup'            # backup-script
 ### Define functions.
 # Put everything where it belongs on the server.
 bkp(){
+    # $1 = mode; $2 = source directory; $3 = destination directory
     [[ -d $2 ]] || return
 
     if [[ $1 == "web" ]]; then
@@ -30,35 +31,48 @@ bkp(){
 
 # Pack dotfiles and send to the server
 dot(){
-    [[ -z $dot ]] && { printf "Don't know what to sync here, sorry\n"; return; }
+    # $1 = mode; $2 = destination directory; $3,N = list of files
+    local TAR="$2.tar"
 
-    local DATE=$(date "+%Y-%m-%d")
-    local DIR="$(mktemp -d)"
-    local TAR="$DIR.tgz"
+    [[ -e $TAR ]] || tar -cf $TAR --files-from /dev/null
 
-    printf "Preparing dotfiles-folder\n"
-    mkdir $DIR/{home,config,localshare}
-
-    printf "Copying dotfiles to dotfiles-folder\n"
-    for one in $dot; do
-        local one_="$HOME/$one"
-        if [[ -e $one_ ]]; then
-            if [[ -n $(echo $one | grep -o "config") ]]; then
-                cp -r $one_ $DIR/config
-            elif [[ -n $(echo $one | grep -o "local") ]]; then
-                cp -r $one_ $DIR/localshare
-            else
-                cp -r $one_ $DIR/home
-            fi
-        fi
-    done
-
-    printf "Compressing with tar\n"
-    tar -czf $TAR --directory=$DIR home config localshare
-
-    printf "Syncing arch.tgz to server\n"
-    rsync "${DSYNCOPT[@]}" $TAR $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tgz
+    printf "Adding %s configuration files to tar archive\n" $1
+    case $1 in
+        home)
+            mkdir -p $2/home/{dot,config,localshare}
+            for one in ${@:3}; do
+                local one_="$HOME/$one"
+                [[ -e $one_ ]] || continue
+                case $(echo $one | awk -F '/' '{ print $1 }') in
+                    ".config") cp -r $one_ $2/home/config ;;
+                    ".local") cp -r $one_ $2/home/localshare ;;
+                    *) cp -r $one_ $2/home/dot/$(echo $one | sed 's/^.//') ;;
+                esac
+            done
+            tar -rf $TAR --directory=$2 home
+            ;;
+        etc)
+            mkdir $2/etc
+            for one in ${@:3}; do
+                local one_="/etc/$one"
+                [[ -e $one_ ]] || continue
+                cp -r $one_ $2/etc
+            done
+            tar -rf $TAR --directory=$2 etc
+            ;;
+    esac
     sleep 3
+}
+
+gzipit(){
+    # $1 = tar file
+    local DATE=$(date "+%Y-%m-%d")
+
+    printf "Compressing archive with gzip\n"
+    gzip $1
+
+    printf "Syncing archive to server\n"
+    rsync "${DSYNCOPT[@]}" ${1}.gz $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tgz
 }
 
 # Check if server is alive to receive the transfers.
@@ -71,6 +85,7 @@ isup(){
 }
 
 ### Define main.
+# $@ = list of options
 if [[ -e $HOME/.config/backup.conf ]]; then
     source $HOME/.config/backup.conf
 elif [[ -e /etc/backup.conf ]]; then
@@ -94,7 +109,10 @@ while (( "$#" )); do
             done
             ;;
         dotfiles)
-            dot
+            DIR="$(mktemp -d)"
+            [[ -n $homeconf ]] && dot home $DIR $homeconf
+            [[ -n $etcconf ]] && dot etc $DIR $etcconf
+            [[ -e ${DIR}.tar ]] && gzipit ${DIR}.tar
             ;;
         "-h" | "--help")
             printf "\$ %s home  web  chrome  dotfiles\n" $PKG

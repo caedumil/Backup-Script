@@ -13,25 +13,18 @@ PKG='backup'            # backup-script
 ### Define functions.
 # Put everything where it belongs on the server.
 bkp(){
-    # $1 = mode; $2 = source directory; $3 = destination directory
-    [[ -d $2 ]] || return
+    # $1 = source directory; $2 = destination directory; $3 = rsync parameters
+    declare -a OPTS=("${!3}")
 
-    if [[ $1 == "web" ]]; then
-        local TARGET="$DETB/$DOT/$3"
-    elif [[ $1 == "home" && $3 == "Music" ]]; then
-        local TARGET="$DESTM"
-    else
-        local TARGET="$DESTB/$3"
-    fi
-
-    printf "Sync %s\n" $3
-    rsync "${OSYNCOPT[@]}" "${DSYNCOPT[@]}" $2/ $SERVER:$TARGET
+    printf "Sync %s\n" $1
+    rsync "${OPTS[@]}" $1 $2
     sleep 3
+    printf "Done\n"
 }
 
-# Pack dotfiles and send to the server
+# Pack dotfiles in a nice tar file
 dot(){
-    # $1 = mode; $2 = destination directory; $3,N = list of files
+    # $1 = mode; $2 = temp folder; $3,N = list of files
     local TAR="$2.tar"
 
     [[ -e $TAR ]] || tar -cf $TAR --files-from /dev/null
@@ -64,15 +57,17 @@ dot(){
     sleep 3
 }
 
+# Compress tar file and send it to server with correct name.
 gzipit(){
-    # $1 = tar file
-    local DATE=$(date "+%Y-%m-%d")
+    # $1 = tar file; $2 = destination directory
+    local date="$(date "+%Y-%m-%d")"
+    local opts=('-a' '-i')
 
     printf "Compressing archive with gzip\n"
     gzip $1
 
     printf "Syncing archive to server\n"
-    rsync "${DSYNCOPT[@]}" ${1}.gz $SERVER:$DESTB/$DOT/arch/arch-${DATE}.tgz
+    bkp "${1}.gz" "${2}/arch-${date}.tgz" opts[@]
 }
 
 # Check if server is alive to receive the transfers.
@@ -98,27 +93,34 @@ while (( "$#" )); do
     case $1 in
         home)
             for per in $HOMEDIR; do
-                [[ -z $per ]] && break
-                bkp home $per $(echo $per | awk -F '/' '{ print $NF }')
+                [[ -n $per && -e $per ]] || continue
+                bkp "$per" "$SERVER:$DESTH" DSYNCOPT[@]
             done
             ;;
         web)
             for con in $WEBDIR; do
-                [[ -z $con ]] && break
-                bkp web $con $(echo $con | awk -F '/' '{ print $NF }' | sed 's/.//')
+                [[ -n $con && -e $per ]] || continue
+                bkp "$con" "$SERVER:$DESTW" DSYNCOPT[@]
+            done
+            ;;
+        extra)
+            for ex in $OTHERDIR; do
+                [[ -n $ex && -e $per ]] || continue
+                bkp "$ex" "$SERVER:$DESTO" DSYNCOPT[@]
             done
             ;;
         dotfiles)
             DIR="$(mktemp -d)"
             [[ -n $homeconf ]] && dot home $DIR $homeconf
             [[ -n $etcconf ]] && dot etc $DIR $etcconf
-            [[ -e ${DIR}.tar ]] && gzipit ${DIR}.tar
+            [[ -e ${DIR}.tar ]] && gzipit "$DIR.tar" "$SERVER:$DESTH/arch"
             ;;
         "-h" | "--help")
             printf "\$ %s home  web  chrome  dotfiles\n" $PKG
             printf "%s\n"\
                 "home       = home folder"\
-                "web        = browser, email"\
+                "web        = web stuff"\
+                "extra      = everything else"\
                 "dotfiles   = .files and .folders"
             break
             ;;

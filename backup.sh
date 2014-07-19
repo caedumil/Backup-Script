@@ -89,7 +89,7 @@ gzipit(){
 
 # Check if server is alive to receive the transfers.
 isup(){
-    if ping -c 1 -w 5 ${SERVER} &>/dev/null; then
+    if ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1; then
         return 0
     else
         return 1

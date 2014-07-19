@@ -12,7 +12,7 @@ PKG='backup'            # backup-script
 
 ### Define functions.
 # Put everything where it belongs on the server.
-bkp(){
+bkp() {
     # $1 = source directory; $2 = destination directory; $3 = rsync parameters
     declare -a OPTS=("${!3}")
 
@@ -23,7 +23,7 @@ bkp(){
 }
 
 # Create a tar file with a README inside
-readme(){
+readme() {
     cat <<-INFO > ${1}/README
 Configuration files and folders.
 
@@ -40,7 +40,7 @@ INFO
 }
 
 # Pack dotfiles in a nice tar file
-dot(){
+dot() {
     # $1 = mode; $2 = temp folder; $3,N = list of files
     local TAR="${2}.tar"
 
@@ -75,7 +75,7 @@ dot(){
 }
 
 # Compress tar file and send it to server with correct name.
-gzipit(){
+gzipit() {
     # $1 = tar file; $2 = destination directory
     local date="$(date "+%Y-%m-%d")"
     local opts=('-a' '-i')
@@ -88,7 +88,7 @@ gzipit(){
 }
 
 # Check if server is alive to receive the transfers.
-isup(){
+isup() {
     if ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1; then
         return 0
     else

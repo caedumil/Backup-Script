@@ -22,12 +22,29 @@ bkp(){
     printf "Done\n"
 }
 
+# Create a tar file with a README inside
+readme(){
+    cat <<-INFO > ${1}/README
+Configuration files and folders.
+
+The name of the folder here tells you were the config files goes!
+    * dot = home folder, hidden files they are.
+    * config = .config folder, put them where they belong.
+    * localshare = .local/share, an unusual place to these important ones.
+    * etc = these goes to /etc, be root to place them.
+
+Now you know everything you should, restore your things! ;)
+INFO
+
+    tar -cf ${1}.tar --directory=${1} README
+}
+
 # Pack dotfiles in a nice tar file
 dot(){
     # $1 = mode; $2 = temp folder; $3,N = list of files
     local TAR="${2}.tar"
 
-    [[ -e ${TAR} ]] || tar -cf ${TAR} --files-from /dev/null
+    [[ -e ${TAR} ]] || readme ${2}
 
     printf "Adding %s configuration files to tar archive\n" ${1}
     case ${1} in

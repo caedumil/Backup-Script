@@ -105,7 +105,10 @@ elif [[ -e /etc/backup.conf ]]; then
 fi
 
 while (( "$#" )); do
-    [[ isup -eq 1 ]] && { printf "Can't connect to server, aborting\n"; exit 1; }
+    [[ isup -eq 1 && ! ${1} =~ ^--?[hv] ]] && {
+        printf "Can't connect to server, aborting\n"
+        exit 1
+    }
 
     case ${1} in
         home)

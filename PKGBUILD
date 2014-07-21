@@ -2,7 +2,7 @@
 
 pkgname=script-backup
 _realname=backup
-pkgver=2.2.0
+pkgver=2.2.1
 pkgrel=1
 pkgdesc="Script para backup dos meu arquivos pessoais"
 arch=('any')
@@ -10,7 +10,7 @@ license=('GPL3')
 depends=('rsync')
 source=('backup.conf' 'backup.sh')
 md5sums=('3b07850a9bc1ebfb921d31e10dabeb0f'
-         '060cc93d6e9667030c3ad06e7fce9a3c')
+         '53a488d4594bb753c7a1820709454950')
 conflicts=('backup')
 backup=('etc/backup.conf')
 

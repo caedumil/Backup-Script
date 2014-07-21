@@ -6,8 +6,8 @@
 #####
 
 ### Define some versioning variables.
-VERSION='2.2.0'         # -- Caedus <caedus75@gmail.com>
-VDATE='2014-07-18'      # release date
+VERSION='2.2.1'         # -- Caedus <caedus75@gmail.com>
+VDATE='2014-07-21'      # release date
 PKG='backup'            # backup-script
 
 ### Define functions.
@@ -100,7 +100,7 @@ while (( "$#" )); do
         web)
             for con in ${WEBDIR}; do
                 [[ -n ${con} && -e ${con} ]] || continue
-                bkp "${con}" "${SERVER:$DESTW}" DSYNCOPT[@]
+                bkp "${con}" "${SERVER}:${DESTW}" DSYNCOPT[@]
             done
             ;;
         extra)

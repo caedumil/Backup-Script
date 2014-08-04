@@ -6,13 +6,13 @@
 #####
 
 ### Define some versioning variables.
-VERSION='2.2.1'         # -- Caedus <caedus75@gmail.com>
-VDATE='2014-07-21'      # release date
+VERSION='2.3.0'         # -- Caedus <caedus75@gmail.com>
+VDATE='2014-08-04'      # release date
 PKG='backup'            # backup-script
 
 ### Define functions.
 # Put everything where it belongs on the server.
-bkp(){
+bkp() {
     # $1 = source directory; $2 = destination directory; $3 = rsync parameters
     declare -a OPTS=("${!3}")
 
@@ -22,12 +22,29 @@ bkp(){
     printf "Done\n"
 }
 
+# Create a tar file with a README inside
+readme() {
+    cat <<-INFO > ${1}/README
+Configuration files and folders.
+
+The name of the folder here tells you were the config files goes!
+    * dot = home folder, hidden files they are.
+    * config = .config folder, put them where they belong.
+    * localshare = .local/share, an unusual place to these important ones.
+    * etc = these goes to /etc, be root to place them.
+
+Now you know everything you should, restore your things! ;)
+INFO
+
+    tar -cf ${1}.tar --directory=${1} README
+}
+
 # Pack dotfiles in a nice tar file
-dot(){
+dot() {
     # $1 = mode; $2 = temp folder; $3,N = list of files
     local TAR="${2}.tar"
 
-    [[ -e ${TAR} ]] || tar -cf ${TAR} --files-from /dev/null
+    [[ -e ${TAR} ]] || readme ${2}
 
     printf "Adding %s configuration files to tar archive\n" ${1}
     case ${1} in
@@ -58,7 +75,7 @@ dot(){
 }
 
 # Compress tar file and send it to server with correct name.
-gzipit(){
+gzipit() {
     # $1 = tar file; $2 = destination directory
     local date="$(date "+%Y-%m-%d")"
     local opts=('-a' '-i')
@@ -71,8 +88,8 @@ gzipit(){
 }
 
 # Check if server is alive to receive the transfers.
-isup(){
-    if ping -c 1 -w 5 ${SERVER} &>/dev/null; then
+isup() {
+    if ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -88,7 +105,10 @@ elif [[ -e /etc/backup.conf ]]; then
 fi
 
 while (( "$#" )); do
-    [[ isup -eq 1 ]] && { printf "Can't connect to server, aborting\n"; exit 1; }
+    [[ isup -eq 1 && ! ${1} =~ ^--?[hv] ]] && {
+        printf "Can't connect to server, aborting\n"
+        exit 1
+    }
 
     case ${1} in
         home)

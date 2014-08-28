@@ -87,15 +87,6 @@ gzipit() {
     bkp "${1}.gz" "${2}/arch-${date}.tgz" opts[@]
 }
 
-# Check if server is alive to receive the transfers.
-isup() {
-    if ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1; then
-        return 0
-    else
-        return 1
-    fi
-}
-
 ### Define main.
 # $@ = list of options
 if [[ -e ${HOME}/.config/backup.conf ]]; then
@@ -105,10 +96,11 @@ elif [[ -e /etc/backup.conf ]]; then
 fi
 
 while (( "$#" )); do
-    [[ isup -eq 1 && ! ${1} =~ ^--?[hv] ]] && {
+    if ! ( ( ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1 ) ||\
+        ( [[ ${1} =~ ^--?[hv] ]] ) ); then
         printf "Can't connect to server, aborting\n"
         exit 1
-    }
+    fi
 
     case ${1} in
         home)

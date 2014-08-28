@@ -6,9 +6,9 @@
 #####
 
 ### Define some versioning variables.
-VERSION='2.3.0'         # -- Caedus <caedus75@gmail.com>
-VDATE='2014-08-04'      # release date
 PKG='backup'            # backup-script
+VERSION='__version'
+VDATE='__vdate'
 
 ### Define functions.
 # Put everything where it belongs on the server.
@@ -137,7 +137,8 @@ while (( "$#" )); do
             break
             ;;
         "-v" | "--version")
-            printf "%s © Caedus75 \nversion %s (%s)\n" ${PKG} ${VERSION} ${VDATE}
+            printf "%s © Caedus75\n" ${PKG}
+            printf "Version %s (%s)\n" ${VERSION} "${VDATE}"
             break
             ;;
     esac

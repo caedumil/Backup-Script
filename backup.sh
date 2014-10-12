@@ -109,12 +109,6 @@ while (( "$#" )); do
                 bkp "${per}" "${SERVER}:${DESTH}" DSYNCOPT[@]
             done
             ;;
-        web)
-            for con in ${WEBDIR}; do
-                [[ -n ${con} && -e ${con} ]] || continue
-                bkp "${con}" "${SERVER}:${DESTW}" DSYNCOPT[@]
-            done
-            ;;
         extra)
             for ex in ${OTHERDIR}; do
                 [[ -n ${ex} && -e ${ex} ]] || continue
@@ -131,7 +125,6 @@ while (( "$#" )); do
             printf "\$ %s home  web  chrome  dotfiles\n" ${PKG}
             printf "%s\n"\
                 "home       = home folder"\
-                "web        = web stuff"\
                 "extra      = everything else"\
                 "dotfiles   = .files and .folders"
             break

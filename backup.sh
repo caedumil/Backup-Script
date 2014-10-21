@@ -103,27 +103,31 @@ while (( "$#" )); do
     fi
 
     case ${1} in
-        home)
+        all | home)
             for per in ${HOMEDIR}; do
                 [[ -n ${per} && -e ${per} ]] || continue
                 bkp "${per}" "${SERVER}:${DESTH}" DSYNCOPT[@]
             done
-            ;;
-        extra)
+            ;;&
+        all | extra)
             for ex in ${OTHERDIR}; do
                 [[ -n ${ex} && -e ${ex} ]] || continue
                 bkp "${ex}" "${SERVER}:${DESTO}" DSYNCOPT[@]
             done
-            ;;
-        dotfiles)
+            ;;&
+        all | dotfiles)
             DIR="$(mktemp -d)"
             [[ -n ${homeconf} ]] && dot home ${DIR} ${homeconf}
             [[ -n ${etcconf} ]] && dot etc ${DIR} ${etcconf}
             [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${SERVER}:${DESTH}/arch"
+            ;;&
+        all)
+            break
             ;;
         "-h" | "--help")
             printf "\$ %s home  web  chrome  dotfiles\n" ${PKG}
             printf "%s\n"\
+                "all        = execute all options below"
                 "home       = home folder"\
                 "extra      = everything else"\
                 "dotfiles   = .files and .folders"

@@ -1,19 +1,21 @@
 #!/bin/bash
-#####
 ##
-##  Script to backup files and folders in a remote server.
 ##
-#####
+##  Script to backup files and folders to a remote server.
+##
+##
 
 ### Define some versioning variables.
-PKG='backup'            # backup-script
+PKG='backup'
 VERSION='__version'
 VDATE='__vdate'
 
 ### Define functions.
-# Put everything where it belongs on the server.
+## Use rsync to sync local to remote.
 bkp() {
-    # $1 = source directory; $2 = destination directory; $3 = rsync parameters
+# $1 = source directory;
+# $2 = destination directory;
+# $3 = rsync parameters.
     declare -a OPTS=("${!3}")
 
     printf "Sync %s\n" ${1}
@@ -22,7 +24,7 @@ bkp() {
     printf "Done\n"
 }
 
-# Create a tar file with a README inside
+## Create a tar file with a README inside.
 readme() {
     cat <<-INFO > ${1}/README
 Configuration files and folders.
@@ -39,9 +41,11 @@ INFO
     tar -cf ${1}.tar --directory=${1} README
 }
 
-# Pack dotfiles in a nice tar file
+## Pack dotfiles in a nice tar file.
 dot() {
-    # $1 = mode; $2 = temp folder; $3,N = list of files
+# $1 = mode;
+# $2 = temp folder;
+# $3,N = list of files.
     local TAR="${2}.tar"
 
     [[ -e ${TAR} ]] || readme ${2}
@@ -74,9 +78,10 @@ dot() {
     sleep 3
 }
 
-# Compress tar file and send it to server with correct name.
+## Compress tar file and send it to server with correct name.
 gzipit() {
-    # $1 = tar file; $2 = destination directory
+# $1 = tar file;
+# $2 = destination directory.
     local date="$(date "+%Y-%m-%d")"
     local opts=('-a' '-i')
 
@@ -88,13 +93,14 @@ gzipit() {
 }
 
 ### Define main.
-# $@ = list of options
+# Source config file.
 if [[ -e ${HOME}/.config/backup.conf ]]; then
     source ${HOME}/.config/backup.conf
 elif [[ -e /etc/backup.conf ]]; then
     source /etc/backup.conf
 fi
 
+# Loop through all cli options, checking if server is online on each option.
 while (( "$#" )); do
     if ! ( ( ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1 ) ||\
         ( [[ ${1} =~ ^--?[hv] ]] ) ); then

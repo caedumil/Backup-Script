@@ -133,7 +133,7 @@ while (( "$#" )); do
         "-h" | "--help")
             printf "\$ %s home  web  chrome  dotfiles\n" ${PKG}
             printf "%s\n"\
-                "all        = execute all options below"
+                "all        = execute all options below"\
                 "home       = home folder"\
                 "extra      = everything else"\
                 "dotfiles   = .files and .folders"

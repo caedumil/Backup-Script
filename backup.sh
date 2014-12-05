@@ -92,6 +92,15 @@ gzipit() {
     bkp "${1}.gz" "${2}/arch-${date}.tgz" opts[@]
 }
 
+## Check connection to remote machine
+isup() {
+# $1 = server
+    if ! ( ping -c 1 -w 5 ${1} >/dev/null 2>&1 ); then
+        printf "Can't connect to server, aborting\n"
+        exit 1
+    fi
+}
+
 ### Define main.
 # Source config file.
 if [[ -e ${HOME}/.config/backup.conf ]]; then
@@ -101,36 +110,9 @@ else
     exit 1
 fi
 
-# Loop through all cli options, checking if server is online on each option.
-while (( "$#" )); do
-    if ! ( ( ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1 ) ||\
-        ( [[ ${1} =~ ^--?[hv] ]] ) ); then
-        printf "Can't connect to server, aborting\n"
-        exit 1
-    fi
-
+# Show message and exit if asking for help
+if [[ ${1} =~ ^--?[hv] ]]; then
     case ${1} in
-        all | home)
-            for per in ${HOMEDIR}; do
-                [[ -n ${per} && -e ${per} ]] || continue
-                bkp "${per}" "${SERVER}:${DESTH}" RSYNCOPT[@]
-            done
-            ;;&
-        all | extra)
-            for ex in ${OTHERDIR}; do
-                [[ -n ${ex} && -e ${ex} ]] || continue
-                bkp "${ex}" "${SERVER}:${DESTO}" RSYNCOPT[@]
-            done
-            ;;&
-        all | dotfiles)
-            DIR="$(mktemp -d)"
-            [[ -n ${homeconf} ]] && dot home ${DIR} ${homeconf}
-            [[ -n ${etcconf} ]] && dot etc ${DIR} ${etcconf}
-            [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${SERVER}:${DESTH}/arch"
-            ;;&
-        all)
-            break
-            ;;
         "-h" | "--help")
             printf "\$ %s home  web  chrome  dotfiles\n" ${PKG}
             printf "%s\n"\
@@ -138,11 +120,40 @@ while (( "$#" )); do
                 "home       = home folder"\
                 "extra      = everything else"\
                 "dotfiles   = .files and .folders"
-            break
             ;;
         "-v" | "--version")
             printf "%s © Caedus75\n" ${PKG}
             printf "Version %s (%s)\n" ${VERSION} "${VDATE}"
+            ;;
+    esac
+    exit 0
+fi
+
+# Loop through all CLI options.
+while (( "$#" )); do
+    case ${1} in
+        all | home)
+            DEST="${SERVER}:${DESTH}"
+            for per in ${HOMEDIR}; do
+                [[ -n ${per} && -e ${per} ]] || continue
+                bkp "${per}" "${DEST}" RSYNCOPT[@]
+            done
+            ;;&
+        all | extra)
+            DEST="${SERVER}:${DESTO}"
+            for ex in ${OTHERDIR}; do
+                [[ -n ${ex} && -e ${ex} ]] || continue
+                bkp "${ex}" "${DEST}" RSYNCOPT[@]
+            done
+            ;;&
+        all | dotfiles)
+            DIR="$(mktemp -d)"
+            DEST="${SERVER}:${DESTD}"
+            [[ -n ${homeconf} ]] && dot home ${DIR} ${homeconf}
+            [[ -n ${etcconf} ]] && dot etc ${DIR} ${etcconf}
+            [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${DEST}"
+            ;;&
+        all)
             break
             ;;
     esac

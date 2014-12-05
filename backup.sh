@@ -113,13 +113,13 @@ while (( "$#" )); do
         all | home)
             for per in ${HOMEDIR}; do
                 [[ -n ${per} && -e ${per} ]] || continue
-                bkp "${per}" "${SERVER}:${DESTH}" DSYNCOPT[@]
+                bkp "${per}" "${SERVER}:${DESTH}" RSYNCOPT[@]
             done
             ;;&
         all | extra)
             for ex in ${OTHERDIR}; do
                 [[ -n ${ex} && -e ${ex} ]] || continue
-                bkp "${ex}" "${SERVER}:${DESTO}" DSYNCOPT[@]
+                bkp "${ex}" "${SERVER}:${DESTO}" RSYNCOPT[@]
             done
             ;;&
         all | dotfiles)

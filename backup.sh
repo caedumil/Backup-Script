@@ -93,16 +93,6 @@ gzipit() {
     bkp "${TAR}.gz" "${DEST}/arch-${date}.tgz" opts[@]
 }
 
-## Check connection to remote machine
-isup() {
-    local REMOTE="${1}"
-
-    if ! ( ping -c 1 -w 5 ${REMOTE} >/dev/null 2>&1 ); then
-        printf "Can't connect to server, aborting\n"
-        exit 1
-    fi
-}
-
 ### Define main.
 # Source config file.
 if [[ -e ${HOME}/.config/backup.conf ]]; then
@@ -131,18 +121,24 @@ if [[ ${1} =~ ^--?[hv] ]]; then
     exit 0
 fi
 
+# Check if destination is remote and online.
+if [[ -n ${SERVER} ]]; then
+    ping -c 1 -w 5 ${SERVER} >/dev/null 2>&1
+    SERVER+=":"
+fi
+
 # Loop through all CLI options.
 while (( "$#" )); do
     case ${1} in
         all | home)
-            DEST="${SERVER}:${DESTH}"
+            DEST="${SERVER}${DESTH}"
             for per in ${HOMEDIR}; do
                 [[ -n ${per} && -e ${per} ]] || continue
                 bkp "${per}" "${DEST}" RSYNCOPT[@]
             done
             ;;&
         all | extra)
-            DEST="${SERVER}:${DESTO}"
+            DEST="${SERVER}${DESTO}"
             for ex in ${OTHERDIR}; do
                 [[ -n ${ex} && -e ${ex} ]] || continue
                 bkp "${ex}" "${DEST}" RSYNCOPT[@]
@@ -150,7 +146,7 @@ while (( "$#" )); do
             ;;&
         all | dotfiles)
             DIR="$(mktemp -d)"
-            DEST="${SERVER}:${DESTD}"
+            DEST="${SERVER}${DESTD}"
             [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} homeconf[@]
             [[ ${#etcconf[@]} -ne 0 ]] && dot etc ${DIR} etcconf[@]
             [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${DEST}"

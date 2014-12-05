@@ -1,7 +1,7 @@
 #!/bin/bash
 ##
 ##
-##  Script to backup files and folders to a remote server.
+##  Script to backup files and folders.
 ##
 ##
 
@@ -10,15 +10,22 @@ PKG='backup'
 VERSION='__version'
 VDATE='__vdate'
 
+### Set modes and traps.
+set -o errexit
+
+trap "printf 'Aborting\n'; exit" ERR
+trap "printf 'Terminated by user\n'; exit" SIGINT SIGTERM SIGKILL
+trap cleanup EXIT
+
 ### Define functions.
-## Use rsync to sync local to remote.
+## Use rsync to sync files.
 bkp() {
     local SRC="${1}"
     local DEST="${2}"
     declare -a OPTS=("${!3}")
 
     printf "Sync %s\n" ${SRC}
-    rsync "${OPTS[@]}" ${SRC} ${DEST}
+    rsync "${OPTS[@]}" ${SRC} ${DEST} 2>/dev/null
     sleep 3
     printf "Done\n"
 }
@@ -93,14 +100,16 @@ gzipit() {
     bkp "${TAR}.gz" "${DEST}/arch-${date}.tgz" opts[@]
 }
 
+## Cleanup the mess.
+cleanup() {
+    [[ -n ${DIR} ]] && rm -r "${DIR}" "${DIR}.tar.gz"
+    exit
+}
+
 ### Define main.
 # Source config file.
-if [[ -e ${HOME}/.config/backup.conf ]]; then
-    source ${HOME}/.config/backup.conf
-else
-    printf "Can't read configuration file, aborting\n"
-    exit 1
-fi
+[[ -e ${HOME}/.config/backup.conf ]] || printf "Can't read config file.\n"
+source ${HOME}/.config/backup.conf
 
 # Show message and exit if asking for help
 if [[ ${1} =~ ^--?[hv] ]]; then
@@ -118,7 +127,7 @@ if [[ ${1} =~ ^--?[hv] ]]; then
             printf "Version %s (%s)\n" ${VERSION} "${VDATE}"
             ;;
     esac
-    exit 0
+    exit
 fi
 
 # Check if destination is remote and online.
@@ -157,4 +166,3 @@ while (( "$#" )); do
     esac
     shift
 done
-exit 0

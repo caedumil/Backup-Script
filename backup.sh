@@ -13,20 +13,21 @@ VDATE='__vdate'
 ### Define functions.
 ## Use rsync to sync local to remote.
 bkp() {
-# $1 = source directory;
-# $2 = destination directory;
-# $3 = rsync parameters.
+    local SRC="${1}"
+    local DEST="${2}"
     declare -a OPTS=("${!3}")
 
-    printf "Sync %s\n" ${1}
-    rsync "${OPTS[@]}" ${1} ${2}
+    printf "Sync %s\n" ${SRC}
+    rsync "${OPTS[@]}" ${SRC} ${DEST}
     sleep 3
     printf "Done\n"
 }
 
 ## Create a tar file with a README inside.
 readme() {
-    cat <<-INFO > ${1}/README
+    local TMP="${1}"
+
+    cat <<-INFO > ${TMP}/README
 Configuration files and folders.
 
 The name of the folder here tells you were the config files goes!
@@ -38,41 +39,41 @@ The name of the folder here tells you were the config files goes!
 Now you know everything you should, restore your things! ;)
 INFO
 
-    tar -cf ${1}.tar --directory=${1} README
+    tar -cf ${TMP}.tar --directory=${TMP} README
 }
 
 ## Pack dotfiles in a nice tar file.
 dot() {
-# $1 = mode;
-# $2 = temp folder;
-# $3,N = list of files.
+    local MODE="${1}"
+    local TMP="${2}"
     local TAR="${2}.tar"
+    declare -a SRCS=("${!3}")
 
-    [[ -e ${TAR} ]] || readme ${2}
+    [[ -e ${TAR} ]] || readme ${TMP}
 
-    printf "Adding %s configuration files to tar archive\n" ${1}
-    case ${1} in
+    printf "Adding %s configuration files to tar archive\n" ${MODE}
+    case ${MODE} in
         home)
-            mkdir -p ${2}/home/{dot,config,localshare}
-            for one in ${@:3}; do
+            mkdir -p ${TMP}/home/{dot,config,localshare}
+            for one in ${SRCS[@]}; do
                 local one_="${HOME}/${one}"
                 [[ -e ${one_} ]] || continue
                 case $(echo ${one} | awk -F '/' '{ print $1 }') in
-                    ".config") cp -r ${one_} ${2}/home/config ;;
-                    ".local") cp -r ${one_} ${2}/home/localshare ;;
-                    *) cp -r ${one_} ${2}/home/dot/$(echo ${one} | sed 's/^.//') ;;
+                    ".config") cp -r ${one_} ${TMP}/home/config ;;
+                    ".local") cp -r ${one_} ${TMP}/home/localshare ;;
+                    *) cp -r ${one_} ${TMP}/home/dot/$(echo ${one} | sed 's/^.//') ;;
                 esac
             done
-            tar -rf ${TAR} --directory=${2} home
+            tar -rf ${TAR} --directory=${TMP} home
             ;;
         etc)
-            mkdir ${2}/etc
-            for one in ${@:3}; do
+            mkdir ${TMP}/etc
+            for one in ${SRCS[@]}; do
                 local one_="/etc/${one}"
                 [[ -e ${one_} ]] || continue
-                cp -r ${one_} ${2}/etc
+                cp -r ${one_} ${TMP}/etc
             done
-            tar -rf ${TAR} --directory=${2} etc
+            tar -rf ${TAR} --directory=${TMP} etc
             ;;
     esac
     sleep 3
@@ -80,22 +81,23 @@ dot() {
 
 ## Compress tar file and send it to server with correct name.
 gzipit() {
-# $1 = tar file;
-# $2 = destination directory.
+    local TAR="${1}"
+    local DEST="${2}"
     local date="$(date "+%Y-%m-%d")"
     local opts=('-a' '-i')
 
     printf "Compressing archive with gzip\n"
-    gzip ${1}
+    gzip ${TAR}
 
     printf "Syncing archive to server\n"
-    bkp "${1}.gz" "${2}/arch-${date}.tgz" opts[@]
+    bkp "${TAR}.gz" "${DEST}/arch-${date}.tgz" opts[@]
 }
 
 ## Check connection to remote machine
 isup() {
-# $1 = server
-    if ! ( ping -c 1 -w 5 ${1} >/dev/null 2>&1 ); then
+    local REMOTE="${1}"
+
+    if ! ( ping -c 1 -w 5 ${REMOTE} >/dev/null 2>&1 ); then
         printf "Can't connect to server, aborting\n"
         exit 1
     fi
@@ -149,8 +151,8 @@ while (( "$#" )); do
         all | dotfiles)
             DIR="$(mktemp -d)"
             DEST="${SERVER}:${DESTD}"
-            [[ -n ${homeconf} ]] && dot home ${DIR} ${homeconf}
-            [[ -n ${etcconf} ]] && dot etc ${DIR} ${etcconf}
+            [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} homeconf[@]
+            [[ ${#etcconf[@]} -ne 0 ]] && dot etc ${DIR} etcconf[@]
             [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${DEST}"
             ;;&
         all)

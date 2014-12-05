@@ -96,8 +96,9 @@ gzipit() {
 # Source config file.
 if [[ -e ${HOME}/.config/backup.conf ]]; then
     source ${HOME}/.config/backup.conf
-elif [[ -e /etc/backup.conf ]]; then
-    source /etc/backup.conf
+else
+    printf "Can't read configuration file, aborting\n"
+    exit 1
 fi
 
 # Loop through all cli options, checking if server is online on each option.

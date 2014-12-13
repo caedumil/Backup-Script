@@ -13,8 +13,8 @@ VDATE='__vdate'
 ### Set modes and traps.
 set -o errexit
 
-trap "printf 'Aborting\n'; exit" ERR
-trap "printf 'Terminated by user\n'; exit" SIGINT SIGTERM SIGKILL
+trap "cleanup 'Aborting\n'" ERR
+trap "cleanup 'Terminated by user\n'" SIGINT SIGTERM SIGKILL
 trap cleanup EXIT
 
 ### Define functions.
@@ -109,7 +109,8 @@ gzipit() {
 
 ## Cleanup the mess.
 cleanup() {
-    [[ -n ${DIR} ]] && rm -r "${DIR}" "${DIR}.tar.gz"
+    [[ -n ${1} ]] && printf "%s\n" "${1}"
+    [[ -e ${DIR} ]] && rm -r "${DIR}"
     exit
 }
 

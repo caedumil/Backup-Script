@@ -18,6 +18,14 @@ trap "printf 'Terminated by user\n'; exit" SIGINT SIGTERM SIGKILL
 trap cleanup EXIT
 
 ### Define functions.
+## Create folder on /tmp and return the path.
+tempdir() {
+    local dir="arch-$(date "+%Y-%m-%d")"
+    local path="/tmp/${dir}"
+
+    mkdir ${path}
+    echo ${path}
+}
 ## Use rsync to sync files.
 bkp() {
     local SRC="${1}"
@@ -53,8 +61,8 @@ INFO
 dot() {
     local MODE="${1}"
     local TMP="${2}"
-    local TAR="${2}.tar"
-    declare -a SRCS=("${!3}")
+    local TAR="${3}"
+    declare -a SRCS=("${!4}")
 
     [[ -e ${TAR} ]] || readme ${TMP}
 
@@ -90,14 +98,13 @@ dot() {
 gzipit() {
     local TAR="${1}"
     local DEST="${2}"
-    local date="$(date "+%Y-%m-%d")"
     local opts=('-a' '-i')
 
     printf "Compressing archive with gzip\n"
     gzip ${TAR}
 
     printf "Syncing archive to server\n"
-    bkp "${TAR}.gz" "${DEST}/arch-${date}.tgz" opts[@]
+    bkp "${TAR}.gz" "${DEST}" opts[@]
 }
 
 ## Cleanup the mess.
@@ -154,11 +161,12 @@ while (( "$#" )); do
             done
             ;;&
         all | dotfiles)
-            DIR="$(mktemp -d)"
+            DIR="$(tempdir)"
+            TAR="${DIR}.tar"
             DEST="${SERVER}${DESTD}"
-            [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} homeconf[@]
-            [[ ${#etcconf[@]} -ne 0 ]] && dot etc ${DIR} etcconf[@]
-            [[ -e ${DIR}.tar ]] && gzipit "${DIR}.tar" "${DEST}"
+            [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} ${TAR} homeconf[@]
+            [[ ${#etcconf[@]} -ne 0 ]] && dot etc ${DIR} ${TAR} etcconf[@]
+            [[ -e ${TAR} ]] && gzipit "${TAR}" "${DEST}"
             ;;&
         all)
             break

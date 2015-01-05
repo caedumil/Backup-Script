@@ -30,8 +30,8 @@ VDATE='__vdate'
 ### Set modes and traps.
 set -o errexit
 
-trap "cleanup 'Aborting\n'" ERR
-trap "cleanup 'Terminated by user\n'" SIGINT SIGTERM SIGKILL
+trap "cleanup 'Aborting'" ERR
+trap "cleanup 'Terminated by user'" SIGINT SIGTERM SIGKILL
 trap cleanup EXIT
 
 ### Define functions.

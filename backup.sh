@@ -183,7 +183,6 @@ while (( "$#" )); do
             TAR="${DIR}.tar"
             DEST="${SERVER}${DESTD}"
             [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} ${TAR} homeconf[@]
-            [[ ${#etcconf[@]} -ne 0 ]] && dot etc ${DIR} ${TAR} etcconf[@]
             [[ -e ${TAR} ]] && gzipit "${TAR}" "${DEST}"
             ;;&
         all)

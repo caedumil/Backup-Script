@@ -66,7 +66,6 @@ The name of the folder here tells you were the config files goes!
     * dot = home folder, hidden files they are.
     * config = .config folder, put them where they belong.
     * localshare = .local/share, an unusual place to these important ones.
-    * etc = these goes to /etc, be root to place them.
 
 Now you know everything you should, restore your things! ;)
 INFO
@@ -76,38 +75,24 @@ INFO
 
 ## Pack dotfiles in a nice tar file.
 dot() {
-    local MODE="${1}"
-    local TMP="${2}"
-    local TAR="${3}"
-    declare -a SRCS=("${!4}")
+    local TMP="${1}"
+    local TAR="${2}"
+    declare -a SRCS=("${!3}")
 
     [[ -e ${TAR} ]] || readme ${TMP}
 
     printf "Adding %s configuration files to tar archive\n" ${MODE}
-    case ${MODE} in
-        home)
-            mkdir -p ${TMP}/home/{dot,config,localshare}
-            for one in ${SRCS[@]}; do
-                local one_="${HOME}/${one}"
-                [[ -e ${one_} ]] || continue
-                case $(echo ${one} | awk -F '/' '{ print $1 }') in
-                    ".config") cp -r ${one_} ${TMP}/home/config ;;
-                    ".local") cp -r ${one_} ${TMP}/home/localshare ;;
-                    *) cp -r ${one_} ${TMP}/home/dot/$(echo ${one} | sed 's/^.//') ;;
-                esac
-            done
-            tar -rf ${TAR} --directory=${TMP} home
-            ;;
-        etc)
-            mkdir ${TMP}/etc
-            for one in ${SRCS[@]}; do
-                local one_="/etc/${one}"
-                [[ -e ${one_} ]] || continue
-                cp -r ${one_} ${TMP}/etc
-            done
-            tar -rf ${TAR} --directory=${TMP} etc
-            ;;
-    esac
+    mkdir -p ${TMP}/home/{dot,config,localshare}
+    for one in ${SRCS[@]}; do
+        local one_="${HOME}/${one}"
+        [[ -e ${one_} ]] || continue
+        case $(echo ${one} | awk -F '/' '{ print $1 }') in
+            ".config") cp -r ${one_} ${TMP}/home/config ;;
+            ".local") cp -r ${one_} ${TMP}/home/localshare ;;
+            *) cp -r ${one_} ${TMP}/home/dot/$(echo ${one} | sed 's/^.//') ;;
+        esac
+    done
+    tar -rf ${TAR} --directory=${TMP} home
     sleep 3
 }
 
@@ -182,7 +167,7 @@ while (( "$#" )); do
             DIR="$(tempdir)"
             TAR="${DIR}.tar"
             DEST="${SERVER}${DESTD}"
-            [[ ${#homeconf[@]} -ne 0 ]] && dot home ${DIR} ${TAR} homeconf[@]
+            [[ ${#homeconf[@]} -ne 0 ]] && dot ${DIR} ${TAR} homeconf[@]
             [[ -e ${TAR} ]] && gzipit "${TAR}" "${DEST}"
             ;;&
         all)
